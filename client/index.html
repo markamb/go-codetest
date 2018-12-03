@@ -1,76 +1,176 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Bootstrap 101 Template</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <!-- Latest compiled and minified CSS -->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+<head>
+  <title>Bootstrap 101 Template</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
-      <!-- Optional theme -->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
 
-      <style type="text/css">
-body {
-  padding-top: 40px;
-  padding-bottom: 40px;
-  background-color: #eee;
-}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script type="text/javascript">
 
-.form-details {
-  max-width: 330px;
-  padding: 15px;
-  margin: 0 auto;
-}
-.form-details .form-details-heading,
-.form-details .checkbox {
-  margin-bottom: 10px;
-}
-.form-details .checkbox {
-  font-weight: normal;
-}
-.form-details .form-control {
-  position: relative;
-  height: auto;
-  padding: 10px;
-  font-size: 16px;
-}
-.form-details .form-control:focus {
-  z-index: 2;
-}
-      </style>
-  </head>
-  <body>
+      var lastWidth, lastHeight;
+      var startTime
+
+      function fireEvent(event) {
+          event.websiteUrl = "https://todo.com";
+          event.sessionId = "123123-123123-123123123";
+          $.ajax({
+              contentType: "application/json",
+              dataType: "json",
+              type: "POST",
+              url: "http://localhost:8080/api",
+              data: JSON.stringify(event),
+          });
+      }
+
+      function fireResizeEvent(lastWidth, lastHeight, width, height) {
+          var event = new Object();
+          event.eventType = "resize";
+          event.oldWidth = lastWidth;
+          event.oldHeight = lastHeight;
+          event.newWidth = width;
+          event.newHeight = height;
+          fireEvent(event)
+      }
+
+      function fireCopyPasteEvent(formId, pasted) {
+          var event = new Object();
+          event.eventType = "copyAndPaste";
+          event.pasted = pasted;
+          event.formId = formId;
+          fireEvent(event)
+      }
+
+      function fireTimeTakenEvent() {
+          var event = new Object();
+          event.eventType = "timeTaken";
+          if (startTime) {
+              var ms = new Date() - startTime;
+              event.time = Math.round(ms / 1000);;
+          }
+          else {
+              event.time = 0;
+          }
+          fireEvent(event);
+      }
+
+      function bindCopyPaste(id) {
+          $("#"+id).bind({
+              copy : function(){
+                  fireCopyPasteEvent(id, false)
+              },
+              paste : function(){
+                  fireCopyPasteEvent(id, true)
+              },
+              cut : function(){
+                  fireCopyPasteEvent(id, false)
+              }
+          });
+      }
+
+      function bindChange(id) {
+          $("#" + id).submit(function() {
+              fireTimeTakenEvent()
+          });
+      }
+
+      function bindSubmit(id) {
+          $("#" + id).change(function() {
+              if (!startTime)
+                  startTime = new Date()
+          });
+      }
+
+      $(document).ready(function() {
+          lastWidth = $(window).width()
+          lastHeight = $(window).height()
+
+          bindCopyPaste("inputEmail")
+          bindCopyPaste("inputCardNumber")
+          bindCopyPaste("inputCVV")
+          bindChange("inputForm")
+          bindChange("inputEmail")
+          bindChange("inputCVV")
+          bindSubmit("inputForm")
+      });
+
+      $(window).resize(function() {
+          var width = $(window).width()
+          var height = $(window).height()
+          fireResizeEvent(lastWidth, lastHeight, width, height)
+          lastWidth = width
+          lastHeight = height
+      });
 
 
 
-    <div class="container">
+  </script>
 
-      <form class="form-details" method="post">
+  <style type="text/css">
+    body {
+      padding-top: 40px;
+      padding-bottom: 40px;
+      background-color: #eee;
+    }
+    .form-details {
+      max-width: 330px;
+      padding: 15px;
+      margin: 0 auto;
+    }
+    .form-details .form-details-heading,
+    .form-details .checkbox {
+      margin-bottom: 10px;
+    }
+    .form-details .checkbox {
+      font-weight: normal;
+    }
+    .form-details .form-control {
+      position: relative;
+      height: auto;
+      padding: 10px;
+      font-size: 16px;
+    }
+    .form-details .form-control:focus {
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
 
-        <h2 class="form-details-heading">Details</h2>
 
-        <label for="inputEmail" class="sr-only">Email address</label>
-        <input type="email" id="inputEmail" class="form-control" 
-        placeholder="Email address" required autofocus>
 
-        <label for="inputCardNumber" class="sr-only">Card Number</label>
-        <input type="text" id="inputCardNumber" class="form-control" 
-        placeholder="Card Number" required>
+<div class="container">
 
-        <label for="inputCVV" class="sr-only">CVV</label>
-        <input type="text" id="inputCVV" class="form-control" 
-        placeholder="Security Code" required>
+  <form id="inputForm" class="form-details" method="post">
 
-        <div class="checkbox">
-          <label>
-            <input type="checkbox" value="agree"> Agree to Terms
-          </label>
-        </div>
+    <h2 class="form-details-heading">Details</h2>
 
-        <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
-      </form>
+    <label for="inputEmail" class="sr-only">Email address</label>
+    <input type="email" id="inputEmail" class="form-control"
+           placeholder="Email address" required autofocus>
 
-    </div> <!-- /container -->
+    <label for="inputCardNumber" class="sr-only">Card Number</label>
+    <input type="text" id="inputCardNumber" class="form-control"
+           placeholder="Card Number" required>
 
-  </body>
+    <label for="inputCVV" class="sr-only">CVV</label>
+    <input type="text" id="inputCVV" class="form-control"
+           placeholder="Security Code" required>
+
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" value="agree"> Agree to Terms
+      </label>
+    </div>
+
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+  </form>
+
+</div> <!-- /container -->
+
+</body>
 </html>
