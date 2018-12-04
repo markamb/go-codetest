@@ -16,9 +16,9 @@
       var startTime
 
       function fireEvent(event) {
-          session = $('#sessionId').val()
-          event.websiteUrl = window.location.href;
-          event.sessionId = session;
+          session = $('#sessionID').val()
+          event.websiteURL = window.location.href;
+          event.sessionID = session;
           $.ajax({
               contentType: "application/json",
               dataType: "json",
@@ -74,15 +74,15 @@
       }
 
       function bindChange(id) {
-          $("#" + id).submit(function() {
-              fireTimeTakenEvent()
+          $("#" + id).change(function() {
+              if (!startTime)
+                  startTime = new Date()
           });
       }
 
       function bindSubmit(id) {
-          $("#" + id).change(function() {
-              if (!startTime)
-                  startTime = new Date()
+          $("#" + id).submit(function() {
+              fireTimeTakenEvent()
           });
       }
 
@@ -106,8 +106,6 @@
           lastWidth = width
           lastHeight = height
       });
-
-
 
   </script>
 
@@ -146,31 +144,28 @@
 
 <div class="container">
 
-  <form id="inputForm" class="form-details" method="post">
+  <form id="inputForm" class="form-details" method="post" action="/index.html">
 
     <h2 class="form-details-heading">Details</h2>
 
     <label for="inputEmail" class="sr-only">Email address</label>
-    <input type="email" id="inputEmail" class="form-control"
-           placeholder="Email address" required autofocus>
+    <input type="email" id="inputEmail" name="inputEmail" class="form-control" placeholder="Email address" required autofocus>
 
     <label for="inputCardNumber" class="sr-only">Card Number</label>
-    <input type="text" id="inputCardNumber" class="form-control"
-           placeholder="Card Number" required>
+    <input type="text" id="inputCardNumber" name="inputCardNumber" class="form-control" placeholder="Card Number" required>
 
     <label for="inputCVV" class="sr-only">CVV</label>
-    <input type="text" id="inputCVV" class="form-control"
-           placeholder="Security Code" required>
+    <input type="text" id="inputCVV" name="inputCVV" class="form-control" placeholder="Security Code" required>
 
     <div class="checkbox">
       <label>
-        <input type="checkbox" value="agree"> Agree to Terms
+        <input type="checkbox" value="agree" name="inputAccepted"> Agree to Terms
       </label>
     </div>
 
-    <input type="hidden" id="sessionId" value="{{.SessionId}}">
+    <input type="hidden" id="sessionID" name="sessionID" value="{{.SessionID}}">
 
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+    <button class="btn btn-lg btn-primary btn-block" type="submit" value="process">Submit</button>
   </form>
 
 </div> <!-- /container -->

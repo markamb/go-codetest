@@ -10,8 +10,8 @@ import (
 // Note that a session is used to store types of type "Data"
 type SessionManager interface {
 	NewSession() (*Data, error)
-	Find(sessionId string) (*Data, bool)
-	Delete(sessionId string)
+	Find(sessionID string) (*Data, bool)
+	Delete(sessionID string)
 }
 
 // CreateSessionManager returns a new SessionManger implementation
@@ -23,26 +23,24 @@ func CreateSessionManager() SessionManager {
 
 // Session stores all the per session data we require
 type Session struct {
-	data   	*Data		// our tracked data for this session
-	//	time.Time	expiry		// TODO: monitor when session expires then delete in background thread
+	data *Data // our tracked data for this session
 }
 
 // DataSessionManager is a thread safe type implementing the SessionManger interface
 type DataSessionManager struct {
-	sessions	map[string]*Session
-	//	maxLifetime	int64		// TODO - expiry of stale sessions
-	mutex		sync.Mutex
+	sessions map[string]*Session
+	mutex    sync.Mutex
 }
 
 // NewSession creates a new session with a random session id and adds it to
 // this session manager. Returns the new Data on success, or an error on failure
 func (m *DataSessionManager) NewSession() (*Data, error) {
-	id, err := makeSessionId()
+	id, err := makeSessionID()
 	if err != nil {
 		return nil, err
 	}
-	d := &Session {
-		&Data{SessionId: id,
+	d := &Session{
+		&Data{SessionID: id,
 			CopyAndPaste: make(map[string]bool),
 		},
 	}
@@ -53,12 +51,12 @@ func (m *DataSessionManager) NewSession() (*Data, error) {
 	return d.data, nil
 }
 
-// Find returns the Data stored for the given SessionId or nil if none exists
+// Find returns the Data stored for the given SessionID or nil if none exists
 // Returns the session if found, and a flag to indicate success
-func (m *DataSessionManager) Find(sessionId string) (*Data, bool) {
+func (m *DataSessionManager) Find(sessionID string) (*Data, bool) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	s, ok := m.sessions[sessionId]
+	s, ok := m.sessions[sessionID]
 	if s == nil || !ok {
 		return nil, false
 	}
@@ -66,16 +64,15 @@ func (m *DataSessionManager) Find(sessionId string) (*Data, bool) {
 }
 
 // Delete removes the specified session id if present (no effect if not found)
-func (m *DataSessionManager) Delete(sessionId string) {
+func (m *DataSessionManager) Delete(sessionID string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	delete(m.sessions, sessionId)
+	delete(m.sessions, sessionID)
 }
 
 // makeSessionId generate a new random session id
-func makeSessionId() (string, error) {
+func makeSessionID() (string, error) {
 	key := make([]byte, 64)
-	// TODO - do we need to set a seded? Could do this in SessionMager construction
 	if _, err := rand.Read(key); err != nil {
 		return "", err
 	}
