@@ -16,13 +16,14 @@
       var startTime
 
       function fireEvent(event) {
-          event.websiteUrl = "https://todo.com";
-          event.sessionId = "123123-123123-123123123";
+          session = $('#sessionId').val()
+          event.websiteUrl = window.location.href;
+          event.sessionId = session;
           $.ajax({
               contentType: "application/json",
               dataType: "json",
               type: "POST",
-              url: "http://localhost:8080/api",
+              url: window.location.origin + "/api",
               data: JSON.stringify(event),
           });
       }
@@ -166,6 +167,8 @@
         <input type="checkbox" value="agree"> Agree to Terms
       </label>
     </div>
+
+    <input type="hidden" id="sessionId" value="{{.SessionId}}">
 
     <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
   </form>
