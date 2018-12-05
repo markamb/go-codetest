@@ -101,8 +101,8 @@ func (s *Server) processMainPagePost(response http.ResponseWriter, request *http
 	response.WriteHeader(http.StatusCreated)
 }
 
-// handleMainPage processes a request for our 1 (and only) page on the site
-func (s *Server) mainPageHandler(response http.ResponseWriter, request *http.Request) {
+// processMainPage processes a request for our 1 (and only) page on the site
+func (s *Server) processMainPage(response http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "GET":
 		s.processMainPageGet(response, request)
@@ -120,9 +120,13 @@ func (s *Server) defaultHandler(response http.ResponseWriter, request *http.Requ
 	case "":
 		fallthrough
 	case "/":
-		// redirect to our main page
-		http.Redirect(response, request, mainPageURL, http.StatusSeeOther)
-		s.mainPageHandler(response, request)
+		if request.Method == "GET" {
+			http.Redirect(response, request, mainPageURL, http.StatusSeeOther)
+		} else {
+			response.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	case mainPageURL:
+		s.processMainPage(response, request)
 	default:
 		response.WriteHeader(http.StatusNotFound)
 		return
@@ -156,11 +160,16 @@ func (s *Server) apiHandler(response http.ResponseWriter, request *http.Request)
 	}
 }
 
+// Init initialises the server ready for use.
+func (s *Server) Init() {
+	s.mainPageTemplate = template.Must(template.ParseFiles("client/index.html"))
+}
+
 // Start setup our routes then starts listening on the required port
 func (s *Server) Start() error {
-	s.mainPageTemplate = template.Must(template.ParseFiles("client/index.html"))
+	s.Init()
 	http.HandleFunc(apiURL, s.apiHandler)
-	http.HandleFunc(mainPageURL, s.mainPageHandler)
+	//	http.HandleFunc(mainPageURL, s.mainPageHandler)
 	http.HandleFunc("/", s.defaultHandler)
 	return http.ListenAndServe(":"+s.Port, nil)
 }
