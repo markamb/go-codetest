@@ -6,10 +6,10 @@ import "hash"
 // HashString calculates a 32 bit hash code for a supplied string and returns it
 //
 // NOTE:
-// 	1. I have implemented the standard Go hash.Hash32 interface for general purpose hash
-// 	calculations, then wrapped that in this helper function to simplify the strings case
-//	2. This hash code is non-cryptographic, instead being optimised for hash tables use
-//  3. This implements a standard FNV-1a hash algorithm for 32 bit hash codes
+// 	1. Implements the standard Go hash.Hash32 interface for general purpose hash
+// 	calculations which is then wrapped in a helper function to simplify the strings use case
+//	2. The hash code is non-cryptographic, instead being optimised for hash tables use
+//  3. This is implemented using a standard FNV-1a hash algorithm for 32 bit hash codes
 //
 func HashString(str string) uint32 {
 	hasher := CreateMyHash32()
@@ -27,7 +27,7 @@ type MyHash32 struct {
 	hashVal uint32
 }
 
-// CreateMyHash32 creates a new Hash32 implementation of the FNV-1a has algorithm
+// CreateMyHash32 creates a new Hash32 implementation of the FNV-1a algorithm
 func CreateMyHash32() hash.Hash32 {
 	hv := MyHash32{}
 	hv.Reset()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -23,7 +24,7 @@ var validControls = map[string]bool{
 
 // Server implements our web server logic
 type Server struct {
-	Port             string
+	Port             uint
 	sessionMgr       SessionManager
 	outFile          *os.File // file to send out put to (default to stdout)
 	mainPageTemplate *template.Template
@@ -45,6 +46,7 @@ type PageEvent struct {
 
 // processEvent processes an event API call
 func (s *Server) processEvent(response http.ResponseWriter, request *http.Request, event *PageEvent, data *Data) {
+	// we need to lock the Data as we can have concurrent requests from same page
 	data.mutex.Lock()
 	defer data.mutex.Unlock()
 
@@ -103,6 +105,10 @@ func (s *Server) processMainPagePost(response http.ResponseWriter, request *http
 	}
 	data.PrintUpdate(s.outFile, "(Form Posted)")
 	s.sessionMgr.Delete(sid) // delete this session once form is submitted
+
+	// we would normally process our posted data and redirect to suitable page here
+	// Instead for this test we'll just send a 201 status code
+	// in a new session (obviously not recommended on a real site!)
 	response.WriteHeader(http.StatusCreated)
 }
 
@@ -176,5 +182,6 @@ func (s *Server) Start() error {
 	http.HandleFunc(apiURL, s.apiHandler)
 	//	http.HandleFunc(mainPageURL, s.mainPageHandler)
 	http.HandleFunc("/", s.defaultHandler)
-	return http.ListenAndServe(":"+s.Port, nil)
+	log.Printf("Listening on port %d...", s.Port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", s.Port), nil)
 }

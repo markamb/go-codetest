@@ -6,10 +6,6 @@ import (
 	"sync"
 )
 
-//
-// Maintains the UI usage data to be stored for a single user interaction
-//
-
 // Dimension represents a pages dimensions
 type Dimension struct {
 	Width  int
@@ -28,7 +24,7 @@ type Data struct {
 	mutex sync.Mutex // need to sync access as could have concurrent api calls
 }
 
-// PrintUpdate writes the current user data to the screen after a user interaction has occured
+// PrintUpdate writes the current user data to the supplied File
 func (d *Data) PrintUpdate(o *os.File, updateType string) {
 	fmt.Fprintf(o, "User Data Updated: %s\n", updateType)
 	fmt.Fprintf(o, "  WebsiteURL: %s\n", d.WebsiteURL)
