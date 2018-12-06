@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 )
 
 const (
@@ -13,6 +14,7 @@ func main() {
 	server := &Server{
 		Port:       dftPort,
 		sessionMgr: CreateSessionManager(),
+		outFile:    os.Stdout,
 	}
 	log.Fatal(server.Start())
 }

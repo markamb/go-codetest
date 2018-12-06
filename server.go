@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 )
 
 const (
@@ -24,6 +25,7 @@ var validControls = map[string]bool{
 type Server struct {
 	Port             string
 	sessionMgr       SessionManager
+	outFile          *os.File // file to send out put to (default to stdout)
 	mainPageTemplate *template.Template
 }
 
@@ -42,7 +44,10 @@ type PageEvent struct {
 }
 
 // processEvent processes an event API call
-func processEvent(response http.ResponseWriter, request *http.Request, event *PageEvent, data *Data) {
+func (s *Server) processEvent(response http.ResponseWriter, request *http.Request, event *PageEvent, data *Data) {
+	data.mutex.Lock()
+	defer data.mutex.Unlock()
+
 	switch event.EventType {
 	case "resize":
 		data.SessionID = event.SessionID
@@ -69,7 +74,7 @@ func processEvent(response http.ResponseWriter, request *http.Request, event *Pa
 		return
 	}
 	data.WebsiteURL = event.WebsiteURL
-	data.PrintUpdate(event.EventType) // dump the current data to the screen
+	data.PrintUpdate(s.outFile, event.EventType) // dump the current data to the screen
 	response.WriteHeader(http.StatusOK)
 }
 
@@ -96,7 +101,7 @@ func (s *Server) processMainPagePost(response http.ResponseWriter, request *http
 		response.WriteHeader(http.StatusForbidden)
 		return
 	}
-	data.PrintUpdate("(Form Posted)")
+	data.PrintUpdate(s.outFile, "(Form Posted)")
 	s.sessionMgr.Delete(sid) // delete this session once form is submitted
 	response.WriteHeader(http.StatusCreated)
 }
@@ -152,7 +157,7 @@ func (s *Server) apiHandler(response http.ResponseWriter, request *http.Request)
 			response.WriteHeader(http.StatusForbidden)
 			return
 		}
-		processEvent(response, request, event, data)
+		s.processEvent(response, request, event, data)
 
 	default:
 		log.Printf("ERROR: Invalid method type recieved in API: %s\n", request.Method)

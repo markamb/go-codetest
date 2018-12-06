@@ -30,6 +30,9 @@ func dftTestData() *Data {
 
 // serverTestCase defines  the inputs and expected response for a server call
 type serverTestCase struct {
+	// Destination for output (default to none - disable output)
+	outFile *os.File
+
 	// handler to call
 	route Route // handler to call (DefaultRoute or APIRoute)
 
@@ -224,7 +227,7 @@ func TestServerAPICopyPasteBadControl(t *testing.T) {
 func ExampleServerAPITimeTaken() {
 	apiRequest := `{"eventType":"timeTaken","time":6,` +
 		`"websiteURL":"http://localhost:8080/index.html","sessionID":"` + testSessionID + `"}"`
-	testAPIRequest(nil, apiRequest, http.StatusOK)
+	exampleAPIRequest(nil, apiRequest, http.StatusOK)
 
 	//Output:
 	//User Data Updated: timeTaken
@@ -234,13 +237,14 @@ func ExampleServerAPITimeTaken() {
 	//   ResizeTo: (0,0)
 	//   copyAndPaste controls:
 	//   FormCompletionTime: 6 seconds
+	//   websiteURLHashCode: 2222077316
 }
 
 func ExampleServerAPICopyPaste() {
 	apiRequest := `{"eventType":"copyAndPaste","pasted":false,"formId":"inputEmail",` +
 		`"websiteURL":"http://localhost:8080/index.html","sessionID":"` +
 		testSessionID + `"}`
-	testAPIRequest(nil, apiRequest, http.StatusOK)
+	exampleAPIRequest(nil, apiRequest, http.StatusOK)
 
 	//Output:
 	//User Data Updated: copyAndPaste
@@ -250,13 +254,14 @@ func ExampleServerAPICopyPaste() {
 	//   ResizeTo: (0,0)
 	//   copyAndPaste controls: inputEmail
 	//   FormCompletionTime: 0 seconds
+	//   websiteURLHashCode: 2222077316
 }
 
 func ExampleServerAPIResize() {
 	apiRequest := `{"eventType":"resize","oldWidth":500,"oldHeight":600,"newWidth":550,` +
 		`"newHeight":650,"websiteURL":"http://localhost:8080/index.html","sessionID":"` +
 		testSessionID + `"}"`
-	testAPIRequest(nil, apiRequest, http.StatusOK)
+	exampleAPIRequest(nil, apiRequest, http.StatusOK)
 
 	//Output:
 	//User Data Updated: resize
@@ -266,6 +271,7 @@ func ExampleServerAPIResize() {
 	//   ResizeTo: (550,650)
 	//   copyAndPaste controls:
 	//   FormCompletionTime: 0 seconds
+	//   websiteURLHashCode: 2222077316
 }
 
 //
@@ -335,6 +341,24 @@ func testAPIRequest(t *testing.T, requestJSON string, expectedStatus int) {
 	testServerRequest(t, test)
 }
 
+// test a POST request to the API and direct output to stdout
+func exampleAPIRequest(t *testing.T, requestJSON string, expectedStatus int) {
+	test := &serverTestCase{
+		outFile:        os.Stdout,
+		route:          APIRoute,
+		method:         "POST",
+		URL:            "http://localhost/api",
+		requestBody:    requestJSON,
+		testBody:       false,
+		expectedStatus: expectedStatus,
+		newCalls:       0,
+		findCalls:      1,
+		deleteCalls:    0,
+		testData:       dftTestData(),
+	}
+	testServerRequest(t, test)
+}
+
 func testServerRequest(t *testing.T, tc *serverTestCase) {
 
 	// disable logging for the duration of the test
@@ -367,6 +391,7 @@ func testServerRequest(t *testing.T, tc *serverTestCase) {
 	}
 
 	server := &Server{
+		outFile:    tc.outFile,
 		sessionMgr: mockSM,
 	}
 	server.Init()

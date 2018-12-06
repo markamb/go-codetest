@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"sync"
+)
 
 //
 // Maintains the UI usage data to be stored for a single user interaction
@@ -20,19 +24,22 @@ type Data struct {
 	ResizeTo           Dimension
 	CopyAndPaste       map[string]bool // map[fieldId]true
 	FormCompletionTime int             // Seconds
+
+	mutex sync.Mutex // need to sync access as could have concurrent api calls
 }
 
 // PrintUpdate writes the current user data to the screen after a user interaction has occured
-func (d *Data) PrintUpdate(updateType string) {
-	fmt.Printf("User Data Updated: %s\n", updateType)
-	fmt.Printf("  WebsiteURL: %s\n", d.WebsiteURL)
-	fmt.Printf("  SessionID: %s\n", d.SessionID)
-	fmt.Printf("  ResizeFrom: (%d,%d)\n", d.ResizeFrom.Width, d.ResizeFrom.Height)
-	fmt.Printf("  ResizeTo: (%d,%d)\n", d.ResizeTo.Width, d.ResizeTo.Height)
-	fmt.Printf("  copyAndPaste controls:")
+func (d *Data) PrintUpdate(o *os.File, updateType string) {
+	fmt.Fprintf(o, "User Data Updated: %s\n", updateType)
+	fmt.Fprintf(o, "  WebsiteURL: %s\n", d.WebsiteURL)
+	fmt.Fprintf(o, "  SessionID: %s\n", d.SessionID)
+	fmt.Fprintf(o, "  ResizeFrom: (%d,%d)\n", d.ResizeFrom.Width, d.ResizeFrom.Height)
+	fmt.Fprintf(o, "  ResizeTo: (%d,%d)\n", d.ResizeTo.Width, d.ResizeTo.Height)
+	fmt.Fprintf(o, "  copyAndPaste controls:")
 	for next := range d.CopyAndPaste {
-		fmt.Printf(" %s", next)
+		fmt.Fprintf(o, " %s", next)
 	}
-	fmt.Println()
-	fmt.Printf("  FormCompletionTime: %d seconds\n", d.FormCompletionTime)
+	fmt.Fprintf(o, "\n")
+	fmt.Fprintf(o, "  FormCompletionTime: %d seconds\n", d.FormCompletionTime)
+	fmt.Fprintf(o, "  websiteURLHashCode: %v\n", HashString(d.WebsiteURL))
 }
